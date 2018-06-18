@@ -9,12 +9,16 @@ const NoMatch = () => <p>Page not found</p>;
 
 const App = () => (
   <BrowserRouter>
-    <Switch>
-      <Route exact path="/" render={() => <Redirect to="/issues" />} />
-      <Route exact path="/issues" component={IssueList} />
-      <Route path="/issues/:id" component={IssueEdit} />
-      <Route path="*" component={NoMatch} />
-    </Switch>
+    <div className="container">
+      <h1>Issue Tracker</h1>
+      <hr />
+      <Switch>
+        <Route exact path="/" render={() => <Redirect to="/issues" />} />
+        <Route exact path="/issues" component={IssueList} />
+        <Route path="/issues/:id" component={IssueEdit} />
+        <Route path="*" component={NoMatch} />
+      </Switch>
+    </div>
   </BrowserRouter>
 );
 

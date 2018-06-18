@@ -1,8 +1,10 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import axios from 'axios';
 
 import IssueTable from './IssueTable';
 import IssueAdd from './IssueAdd';
+import IssueFilter from './IssueFilter';
 
 class IssueList extends React.Component {
   constructor() {
@@ -17,8 +19,17 @@ class IssueList extends React.Component {
     this.loadData();
   }
 
+  componentDidUpdate(prevProps) {
+    const oldQuery = prevProps.location.search;
+    const newQuery = this.props.location.search;
+    if (oldQuery === newQuery) {
+      return;
+    }
+    this.loadData();
+  }
+
   loadData() {
-    axios.get('/api/issues').then((response) => {
+    axios.get(`/api/issues${this.props.location.search}`).then((response) => {
       const issues = response.data;
       issues.forEach((issue) => {
         issue.created = new Date(issue.created); // eslint-disable-line no-param-reassign
@@ -44,8 +55,8 @@ class IssueList extends React.Component {
 
   render() {
     return (
-      <div className="container">
-        <h1>Issue Tracker</h1>
+      <div>
+        <IssueFilter />
         <hr />
         <IssueTable issues={this.state.issues} />
         <hr />
@@ -54,5 +65,11 @@ class IssueList extends React.Component {
     );
   }
 }
+
+IssueList.propTypes = {
+  location: PropTypes.shape({
+    search: PropTypes.string,
+  }).isRequired,
+};
 
 export default IssueList;
