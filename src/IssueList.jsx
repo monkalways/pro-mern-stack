@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
+import queryString from 'query-string';
 
 import IssueTable from './IssueTable';
 import IssueAdd from './IssueAdd';
@@ -20,22 +21,30 @@ class IssueList extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    const oldQuery = prevProps.location.search;
-    const newQuery = this.props.location.search;
-    if (oldQuery === newQuery) {
+    const oldQuery = queryString.parse(prevProps.location.search);
+    const newQuery = queryString.parse(this.props.location.search);
+    if (
+      oldQuery.status === newQuery.status &&
+      oldQuery.effortGte === newQuery.effortGte &&
+      oldQuery.effortLte === newQuery.effortLte
+    ) {
       return;
     }
     this.loadData();
   }
 
+  getInitFilter() {
+    const parsed = queryString.parse(this.props.location.search);
+    return parsed;
+  }
+
   loadData() {
-    axios.get(`/api/issues${this.props.location.search}`).then((response) => {
+    axios.get(`/api/issues${this.props.location.search}`).then(response => {
       const issues = response.data;
-      issues.forEach((issue) => {
-        issue.created = new Date(issue.created); // eslint-disable-line no-param-reassign
+      issues.forEach(issue => {
+        issue.created = new Date(issue.created);
         if (issue.completionDate) {
-          issue.completionDate = // eslint-disable-line no-param-reassign
-            new Date(issue.completionDate);
+          issue.completionDate = new Date(issue.completionDate);
         }
       });
       this.setState({ issues });
@@ -43,7 +52,7 @@ class IssueList extends React.Component {
   }
 
   createIssue(newIssue) {
-    axios.post('/api/issues', newIssue).then((response) => {
+    axios.post('/api/issues', newIssue).then(response => {
       const issue = response.data;
       issue.created = new Date(issue.created);
       if (issue.completionDate) {
@@ -56,7 +65,7 @@ class IssueList extends React.Component {
   render() {
     return (
       <div>
-        <IssueFilter />
+        <IssueFilter initFilter={this.getInitFilter()} />
         <hr />
         <IssueTable issues={this.state.issues} />
         <hr />
