@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 
 let db;
 MongoClient.connect('mongodb://localhost').then(client => {
@@ -28,6 +28,31 @@ app.get('/api/issues', (req, res) => {
     .toArray()
     .then(issues => {
       res.json(issues);
+    });
+});
+
+app.get('/api/issues/:id', (req, res) => {
+  let issueId;
+  try {
+    issueId = new ObjectId(req.params.id);
+  } catch (error) {
+    res.status(400).json({ message: `Invalid issue ID format: ${error}` });
+  }
+
+  db.collection('issues')
+    .find({ _id: issueId })
+    .limit(1)
+    .next()
+    .then(issue => {
+      if (!issue) {
+        res.status(404).json({ message: `No such issue: ${issueId}` });
+      } else {
+        res.json(issue);
+      }
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).json({ message: `Internal Server Error: ${error}` });
     });
 });
 
