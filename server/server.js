@@ -2,6 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { MongoClient, ObjectId } = require('mongodb');
 
+const convertIssue = require('./issues');
+
 let db;
 MongoClient.connect('mongodb://localhost').then(client => {
   db = client.db('issuetracker');
@@ -48,6 +50,58 @@ app.get('/api/issues/:id', (req, res) => {
         res.status(404).json({ message: `No such issue: ${issueId}` });
       } else {
         res.json(issue);
+      }
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).json({ message: `Internal Server Error: ${error}` });
+    });
+});
+
+app.put('/api/issues/:id', (req, res) => {
+  let issueId;
+  try {
+    issueId = new ObjectId(req.params.id);
+  } catch (error) {
+    res.status(400).json({ message: `Invalid issue ID format: ${error}` });
+  }
+
+  const issue = req.body;
+  delete issue._id;
+
+  db.collection('issues')
+    .update({ _id: issueId }, convertIssue(issue))
+    .then(() =>
+      db
+        .collection('issues')
+        .find({ _id: issueId })
+        .limit(1)
+        .next(),
+    )
+    .then(savedIssue => {
+      res.json(savedIssue);
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).json({ message: `Internal Server Error: ${error}` });
+    });
+});
+
+app.delete('/api/issues/:id', (req, res) => {
+  let issueId;
+  try {
+    issueId = new ObjectId(req.params.id);
+  } catch (error) {
+    res.status(400).json({ message: `Invalid issue ID format: ${error}` });
+  }
+
+  db.collection('issues')
+    .deleteOne({ _id: issueId })
+    .then(doc => {
+      if (doc.deletedCount === 1) {
+        res.json({ status: 'OK' });
+      } else {
+        res.json({ status: 'Object not found' });
       }
     })
     .catch(error => {

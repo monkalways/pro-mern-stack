@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 
-const IssueRow = ({ issue }) => (
+const IssueRow = ({ issue, deleteIssue }) => (
   <tr>
     <td><Link to={`/issues/${issue._id}`}>{issue._id.substr(-4)}</Link></td>
     <td>{issue.owner}</td>
@@ -11,6 +11,7 @@ const IssueRow = ({ issue }) => (
     <td>{issue.effort}</td>
     <td>{issue.completionDate ? issue.completionDate.toDateString() : ''}</td>
     <td>{issue.title}</td>
+    <td><button className="btn btn-link" onClick={() => deleteIssue(issue)} >Delete</button></td>
   </tr>
 );
 
@@ -24,9 +25,10 @@ IssueRow.propTypes = {
     completionDate: PropTypes.instanceOf(Date),
     title: PropTypes.string.isRequired,
   }).isRequired,
+  deleteIssue: PropTypes.func.isRequired,
 };
 
-const IssueTable = ({ issues }) => (
+const IssueTable = ({ issues, deleteIssue }) => (
   <table className="table table-bordered">
     <thead>
       <tr>
@@ -37,10 +39,11 @@ const IssueTable = ({ issues }) => (
         <th>Effort</th>
         <th>Completion Date</th>
         <th>Title</th>
+        <th>Delete</th>
       </tr>
     </thead>
     <tbody>
-      {issues.map(issue => <IssueRow key={issue._id} issue={issue} />)}
+      {issues.map(issue => <IssueRow key={issue._id} issue={issue} deleteIssue={deleteIssue} />)}
     </tbody>
   </table>
 );
@@ -55,6 +58,7 @@ IssueTable.propTypes = {
     completionDate: PropTypes.instanceOf(Date),
     title: PropTypes.string.isRequired,
   })).isRequired,
+  deleteIssue: PropTypes.func.isRequired,
 };
 
 export default IssueTable;

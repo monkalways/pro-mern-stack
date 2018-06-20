@@ -14,6 +14,7 @@ class IssueList extends React.Component {
 
     this.loadData = this.loadData.bind(this);
     this.createIssue = this.createIssue.bind(this);
+    this.deleteIssue = this.deleteIssue.bind(this);
   }
 
   componentDidMount() {
@@ -62,12 +63,23 @@ class IssueList extends React.Component {
     });
   }
 
+  deleteIssue(issue) {
+    axios.delete(`/api/issues/${issue._id}`).then(response => {
+      const { status } = response.data;
+      if (status === 'OK') {
+        this.loadData();
+      } else {
+        alert('Issue deletion failed');
+      }
+    });
+  }
+
   render() {
     return (
       <div>
         <IssueFilter initFilter={this.getInitFilter()} />
         <hr />
-        <IssueTable issues={this.state.issues} />
+        <IssueTable issues={this.state.issues} deleteIssue={this.deleteIssue} />
         <hr />
         <IssueAdd createIssue={this.createIssue} />
       </div>

@@ -3,6 +3,9 @@ import PropTypes from 'prop-types';
 import { Link, withRouter } from 'react-router-dom';
 import axios from 'axios';
 
+import NumInput from './NumInput';
+import DateInput from './DateInput';
+
 const statusOptions = [
   '',
   'New',
@@ -25,42 +28,63 @@ class IssueEdit extends React.Component {
         owner: '',
         status: '',
         created: '',
-        effort: '',
-        completionDate: '',
+        effort: null,
+        completionDate: null,
         title: '',
       },
     };
 
     this.loadData = this.loadData.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   componentDidMount() {
     this.loadData();
   }
 
-  // componentDidUpdate(prevProps) {
-  //   if (prevProps.match.params.id !== this.props.match.params.id) {
-  //     this.loadData();
-  //   }
-  // }
+  componentDidUpdate(prevProps) {
+    if (prevProps.match.params.id !== this.props.match.params.id) {
+      this.loadData();
+    }
+  }
 
   loadData() {
     axios.get(`/api/issues/${this.props.match.params.id}`).then(response => {
       const issue = response.data;
       issue.created = new Date(issue.created).toDateString();
       issue.completionDate = issue.completionDate
-        ? new Date(issue.completionDate).toDateString()
-        : '';
-      issue.effort = issue.effort ? issue.effort.toString() : '';
+        ? new Date(issue.completionDate)
+        : null;
+      issue.effort = !Number.isNaN(issue.effort)
+        ? parseInt(issue.effort, 10)
+        : null;
       this.setState({ issue });
     });
   }
 
-  handleChange(e) {
+  handleChange(e, convertedValue) {
     const issue = { ...this.state.issue };
-    issue[e.target.name] = e.target.value;
+    const value =
+      convertedValue !== undefined ? convertedValue : e.target.value;
+    issue[e.target.name] = value;
     this.setState({ issue });
+  }
+
+  handleSubmit(e) {
+    e.preventDefault();
+
+    axios
+      .put(`/api/issues/${this.props.match.params.id}`, this.state.issue)
+      .then(response => {
+        const updatedIssue = response.data;
+        updatedIssue.created = new Date(updatedIssue.created).toDateString();
+        updatedIssue.completionDate = updatedIssue.completionDate
+          ? new Date(updatedIssue.completionDate)
+          : null;
+        this.setState({ issue: updatedIssue });
+        alert('Update issue successfully!');
+      });
   }
 
   render() {
@@ -117,8 +141,7 @@ class IssueEdit extends React.Component {
         </div>
         <div className="form-group">
           <label htmlFor="created">Effort</label>
-          <input
-            type="text"
+          <NumInput
             id="effort"
             name="effort"
             className="form-control"
@@ -128,8 +151,7 @@ class IssueEdit extends React.Component {
         </div>
         <div className="form-group">
           <label htmlFor="completionDate">Completion Date</label>
-          <input
-            type="text"
+          <DateInput
             id="completionDate"
             name="completionDate"
             className="form-control"
